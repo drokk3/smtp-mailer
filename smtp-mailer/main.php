@@ -222,6 +222,10 @@ class SMTP_MAILER {
             if(isset($_POST['smtp_auth']) && !empty($_POST['smtp_auth'])){
                 $smtp_auth = sanitize_text_field($_POST['smtp_auth']);
             }
+            $smtp_auth_type = '';
+            if(isset($_POST['smtp_auth_type']) && !empty($_POST['smtp_auth_type'])){
+                $smtp_auth_type = sanitize_text_field($_POST['smtp_auth_type']);
+            }
             $smtp_username = '';
             if(isset($_POST['smtp_username']) && !empty($_POST['smtp_username'])){
                 $smtp_username = sanitize_text_field($_POST['smtp_username']);
@@ -256,6 +260,7 @@ class SMTP_MAILER {
             $options = array();
             $options['smtp_host'] = $smtp_host;
             $options['smtp_auth'] = $smtp_auth;
+            $options['smtp_auth_type'] = $smtp_auth_type;
             $options['smtp_username'] = $smtp_username;
             if(!empty($smtp_password)){
                 $options['smtp_password'] = $smtp_password;
@@ -304,6 +309,18 @@ class SMTP_MAILER {
                             <option value="false" <?php echo selected( $options['smtp_auth'], 'false', false );?>><?php _e('False', 'smtp-mailer');?></option>
                         </select>
                         <p class="description"><?php _e('Whether to use SMTP Authentication when sending an email (recommended: True).', 'smtp-mailer');?></p>
+                    </td>
+                    </tr>
+
+                    <tr>
+                    <th scope="row"><label for="smtp_auth_type"><?php _e('Auth Type', 'smtp-mailer');?></label></th>
+                    <td>
+                        <select name="smtp_auth_type" id="smtp_auth_type">
+                            <option value="DEFAULT" <?php echo selected( $options['smtp_auth_type'], 'DEFAULT', false );?>><?php _e('Default', 'smtp-mailer');?></option>
+                            <option value="PLAIN" <?php echo selected( $options['smtp_auth_type'], 'PLAIN', false );?>>PLAIN</option>
+                            <option value="LOGIN" <?php echo selected( $options['smtp_auth_type'], 'LOGIN', false );?>>LOGIN</option>
+                            <option value="CRAM-MD5" <?php echo selected( $options['smtp_auth_type'], 'CRAM-MD5', false );?>>CRAM-MD5</option>
+                        </select>
                     </td>
                     </tr>
                     
@@ -389,6 +406,7 @@ function smtp_mailer_get_empty_options_array(){
     $options = array();
     $options['smtp_host'] = '';
     $options['smtp_auth'] = '';
+    $options['smtp_auth_type'] = '';
     $options['smtp_username'] = '';
     $options['smtp_password'] = '';
     $options['type_of_encryption'] = '';
@@ -416,6 +434,9 @@ function is_smtp_mailer_configured() {
         $smtp_configured = false;
     }
     if(!isset($options['smtp_auth']) || empty($options['smtp_auth'])){
+        $smtp_configured = false;
+    }
+    if(!isset($options['smtp_auth_type']) || empty($options['smtp_auth_type'])){
         $smtp_configured = false;
     }
     if(isset($options['smtp_auth']) && $options['smtp_auth'] == "true"){
@@ -693,6 +714,10 @@ function smtp_mailer_pre_wp_mail($null, $atts)
         $phpmailer->Username = $options['smtp_username'];
         // SMTP password
         $phpmailer->Password = base64_decode($options['smtp_password']);  
+        
+    }
+    if(isset($options['smtp_auth_type']) && $options['smtp_auth_type'] != "DEFAULT"){
+        $phpmailer->AuthType = $options['smtp_auth_type'];
     }
     // Whether to use encryption
     $type_of_encryption = $options['type_of_encryption'];
